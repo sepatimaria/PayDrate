@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html class="light scroll-smooth" lang="id">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>PayDrate | Premium Fintech Smart Water Refill</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0F52FF",
+                        "secondary": "#48CFFF",
+                        "accent": "#8AE8FF",
+                        "surface": "#ffffff",
+                        "background": "#F4F8FF",
+                        "on-surface": "#0F172A",
+                        "outline": "#64748B",
+                        "outline-variant": "#E2E8F0",
+                        "error": "#EF4444",
+                        "success": "#10B981"
+                    },
+                    borderRadius: {
+                        "3xl": "24px"
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #FFFFFF 0%, #E6F0FF 100%); }
+        .font-sora { font-family: 'Sora', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-panel { background: rgba(255, 255, 255, 0.45); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.6); }
+        .glass-card { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.7); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .glass-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px -15px rgba(15, 82, 255, 0.12); }
+        .hero-bg { background: radial-gradient(circle at 80% 20%, rgba(72, 207, 255, 0.25) 0%, transparent 50%), radial-gradient(circle at 20% 80%, rgba(15, 82, 255, 0.15) 0%, transparent 60%), linear-gradient(135deg, #0A1931 0%, #15305B 100%); }
+        .wave-pattern { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='20' viewBox='0 0 80 20'%3E%3Cpath d='M0 10 Q 20 0, 40 10 T 80 10 L 80 20 L 0 20 Z' fill='%230F52FF' fill-opacity='0.03'/%3E%3C/svg%3E"); }
+        @keyframes bubbleUp { 0% { transform: translateY(100%) scale(0.8); opacity: 0; } 50% { opacity: 0.4; } 100% { transform: translateY(-20vh) scale(1.2); opacity: 0; } }
+        .bubble { position: absolute; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); pointer-events: none; }
+        #liquidVisual { transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1), fill 0.4s ease; }
+        .ripple { animation: rippleAnim 2s infinite ease-in-out; }
+        @keyframes rippleAnim { 0%, 100% { d: path('M24 110 Q 37 107, 50 110 T 76 110 L 76 175 Q 50 178, 24 175 Z'); } 50% { d: path('M24 110 Q 37 113, 50 110 T 76 110 L 76 175 Q 50 172, 24 175 Z'); } }
+        .avatar-placeholder { background: linear-gradient(135deg, #64748B 0%, #334155 100%); }
+    </style>
+</head>
+<body class="text-on-surface antialiased min-h-screen wave-pattern bg-repeat-y pb-12">
+
+    <div id="bubbleContainer" class="absolute inset-0 overflow-hidden pointer-events-none z-10 h-[100vh]"></div>
+
+    <!-- NAVBAR UTAMA -->
+    <header id="mainNavbar" class="fixed top-0 left-0 right-0 z-50 h-20 flex items-center justify-between px-6 md:px-16 transition-all duration-300 bg-transparent text-white">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="switchView('beranda')">
+            <span class="material-symbols-outlined text-primary text-3xl font-extrabold animate-pulse">water_drop</span>
+            <span class="font-sora font-extrabold text-2xl tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">PayDrate</span>
+        </div>
+        
+        <!-- NAVBAR KEMBALI NORMAL HANYA BERANDA, ISI AIR, TENTANG -->
+        <nav class="hidden md:flex items-center gap-8 font-semibold text-sm">
+            <button onclick="switchView('beranda')" class="nav-link text-inherit hover:text-secondary transition-colors" data-view="beranda">Beranda</button>
+            <button onclick="scrollToProducts()" class="nav-link text-inherit hover:text-secondary transition-colors">Isi Air</button>
+            <button onclick="scrollToAbout()" class="nav-link text-inherit hover:text-secondary transition-colors">Tentang</button>
+        </nav>
+
+        <div class="flex items-center gap-3">
+            <div id="walletButton" onclick="switchView('profile'); switchProfileTab('payment')" class="cursor-pointer bg-black px-3 py-1.5 rounded-2xl flex items-center gap-2 border border-white/10 text-white shadow-sm hover:scale-105 transition-all">
+                <span class="material-symbols-outlined text-sm text-secondary font-bold">account_balance_wallet</span>
+                <span id="navWalletBalanceDisplay" class="font-mono text-xs font-bold text-white">Rp 75.000</span>
+            </div>
+
+            <div class="relative">
+                <button id="notifButton" onclick="toggleNotificationDropdown(event)" class="relative w-10 h-10 flex items-center justify-center rounded-full bg-black hover:bg-slate-800 text-white transition-all shadow-sm border border-white/10">
+                    <span class="material-symbols-outlined text-xl">notifications</span>
+                    <span id="navNotificationBadge" class="absolute top-1 right-1 bg-error w-2 h-2 rounded-full hidden"></span>
+                </button>
+                <div id="notificationDropdownMenu" class="absolute right-0 mt-3 w-80 bg-white rounded-2xl border border-slate-100 shadow-xl p-4 hidden z-50 text-xs">
+                    <div class="flex justify-between items-center border-b pb-2 mb-2 font-sora font-bold">
+                        <span class="text-on-surface">Pemberitahuan</span>
+                        <button onclick="clearNotifications()" class="text-[10px] text-primary hover:underline">Hapus Semua</button>
+                    </div>
+                    <div id="notificationListItems" class="space-y-2.5 max-h-60 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+
+            <button id="cartButton" onclick="openCartModal()" class="relative w-10 h-10 flex items-center justify-center rounded-full bg-black hover:bg-slate-800 text-white transition-all shadow-sm border border-white/10">
+                <span class="material-symbols-outlined text-xl">shopping_cart</span>
+                <span id="cartBadgeCount" class="absolute -top-1 -right-1 bg-primary text-white font-mono text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shadow">0</span>
+            </button>
+            <div onclick="switchView('profile')" class="w-10 h-10 rounded-full border-2 border-secondary overflow-hidden cursor-pointer shadow-sm hover:scale-105 transition-all avatar-placeholder flex items-center justify-center">
+                <span class="material-symbols-outlined text-white text-xl">person</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- VIEW: BERANDA -->
+    <div id="view-beranda" class="view-section space-y-24">
+        <!-- HERO -->
+        <section class="hero-bg relative min-h-screen pt-36 pb-20 px-6 md:px-16 flex flex-col justify-center items-center text-center text-white overflow-hidden">
+            <div class="absolute -top-40 right-1/4 w-[500px] h-[500px] bg-primary/20 rounded-full filter blur-[120px] pointer-events-none"></div>
+            
+            <div class="relative z-20 max-w-4xl space-y-6">
+                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-bold font-sora tracking-wide uppercase shadow-inner text-secondary">
+                    <span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>Cashless Smart Water Dispenser
+                </span>
+                <h1 class="font-sora text-4xl md:text-6xl font-black tracking-tight leading-tight">
+                    Air Bersih, <br><span class="bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">Pembayaran Lebih Mudah.</span>
+                </h1>
+                <p class="text-slate-300 text-base md:text-lg max-w-2xl mx-auto font-medium leading-relaxed">
+                    Pesan air berkualitas tinggi suhu dingin maupun panas langsung dari ekosistem dispenser pintar kami hanya dalam hitungan detik dengan integrasi fintech teraman Anda.
+                </p>
+                <div class="pt-4 flex flex-wrap justify-center gap-4">
+                    <button onclick="scrollToProducts()" class="h-14 px-8 bg-primary hover:bg-blue-600 font-bold text-white rounded-3xl shadow-lg shadow-primary/30 transform hover:-translate-y-1 transition-all flex items-center gap-2 text-sm font-sora">
+                        Isi Air Sekarang <span class="material-symbols-outlined text-lg">arrow_forward</span>
+                    </button>
+                    <button onclick="scrollToHowItWorks()" class="h-14 px-8 glass-panel hover:bg-white/15 font-semibold text-white rounded-3xl transform hover:-translate-y-1 transition-all text-sm font-sora">
+                        Lihat Cara Kerja
+                    </button>
+                </div>
+
+                <div class="pt-16 max-w-xl mx-auto">
+                    <div class="glass-panel p-4 rounded-3xl flex flex-wrap justify-around items-center gap-4 border border-white/10 shadow-2xl">
+                        <span class="text-[10px] font-black text-blue-600 font-mono tracking-tighter bg-white px-3 py-1 rounded-md shadow-sm">PAYDRATE WALLET</span>
+                        <span class="text-[10px] font-black text-red-500 font-mono tracking-tighter bg-white px-3 py-1 rounded-md shadow-sm">QRIS</span>
+                        <span class="text-[11px] font-bold text-orange-500 font-sans bg-white px-3 py-1 rounded-md shadow-sm">ShopeePay</span>
+                        <span class="text-[11px] font-extrabold text-cyan-500 font-sans bg-white px-3 py-1 rounded-md shadow-sm">go<span class="text-emerald-500">pay</span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent z-10"></div>
+        </section>
+
+        <!-- FITUR UTAMA -->
+        <section class="max-w-7xl mx-auto px-6 md:px-16 space-y-12">
+            <div class="text-center space-y-2">
+                <h2 class="font-sora text-3xl font-black text-on-surface tracking-tight">Teknologi Hidrasi Unggulan</h2>
+                <p class="text-outline text-sm font-medium">Standar baru pengisian air minum mandiri yang efisien dan higienis.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-card p-6 rounded-3xl shadow-sm space-y-4">
+                    <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+                        <span class="material-symbols-outlined text-2xl font-bold">water_drop</span>
+                    </div>
+                    <h3 class="font-sora font-bold text-lg text-on-surface">Air Berkualitas</h3>
+                    <p class="text-outline text-xs leading-relaxed font-medium">Filtrasi multi-tahap ultraviolet menjamin kemurnian air yang segar di setiap tetesnya.</p>
+                </div>
+                <div class="glass-card p-6 rounded-3xl shadow-sm space-y-4">
+                    <div class="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary shadow-inner">
+                        <span class="material-symbols-outlined text-2xl font-bold">bolt</span>
+                    </div>
+                    <h3 class="font-sora font-bold text-lg text-on-surface">Isi Cepat</h3>
+                    <p class="text-outline text-xs leading-relaxed font-medium">Konektivitas mesin pintar mempersingkat waktu pengisian kurang dari 15 detik.</p>
+                </div>
+                <div class="glass-card p-6 rounded-3xl shadow-sm space-y-4">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-success shadow-inner">
+                        <span class="material-symbols-outlined text-2xl font-bold">lock</span>
+                    </div>
+                    <h3 class="font-sora font-bold text-lg text-on-surface">Pembayaran Aman</h3>
+                    <p class="text-outline text-xs leading-relaxed font-medium">Proses enkripsi gerbang pembayaran fintech menjamin dana transaksi Anda 100% aman.</p>
+                </div>
+                <div class="glass-card p-6 rounded-3xl shadow-sm space-y-4">
+                    <div class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 shadow-inner">
+                        <span class="material-symbols-outlined text-2xl font-bold">distance</span>
+                    </div>
+                    <h3 class="font-sora font-bold text-lg text-on-surface">Dispenser Terdekat</h3>
+                    <p class="text-outline text-xs leading-relaxed font-medium">Temukan armada stasiun pengisian PayDrate terdekat di sekitar klaster hunian Anda.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PRODUK DAN PREVIEW BOTOL -->
+        <section id="products-section" class="max-w-6xl mx-auto px-6 md:px-16 space-y-10">
+            <div class="text-center md:text-left space-y-1">
+                <h2 class="font-sora text-3xl md:text-4xl font-black text-on-surface tracking-tight">Pilih Kebutuhan Air Anda</h2>
+                <p class="text-outline text-sm font-medium">Sesuaikan tingkat kehangatan suhu, kapasitas botol, dan masukkan ke dalam keranjang.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                <div class="lg:col-span-5 bg-gradient-to-br from-primary to-blue-800 text-white p-8 rounded-3xl shadow-2xl flex flex-col justify-between space-y-8 relative overflow-hidden border border-primary/20">
+                    <div class="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full filter blur-xl pointer-events-none"></div>
+                    
+                    <div class="space-y-4">
+                        <span class="text-[10px] font-extrabold text-blue-100 uppercase tracking-widest bg-white/15 px-3 py-1.5 rounded-lg">Langkah 1</span>
+                        <h3 class="font-sora text-xl md:text-2xl font-bold tracking-tight">Pilih Jenis Suhu</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <button id="btnTempCold" onclick="changeTemperature('Cold')" class="h-20 flex items-center justify-between px-6 rounded-2xl border-2 border-white bg-white/20 text-base md:text-lg font-black transition-all shadow-md">
+                                <span class="flex items-center gap-3"><span class="material-symbols-outlined text-cyan-200 text-3xl font-bold">ac_unit</span>Dingin</span>
+                            </button>
+                            <button id="btnTempHot" onclick="changeTemperature('Hot')" class="h-20 flex items-center justify-between px-6 rounded-2xl border border-white/20 bg-white/5 text-base md:text-lg font-bold opacity-60 transition-all">
+                                <span class="flex items-center gap-3"><span class="material-symbols-outlined text-orange-300 text-3xl font-bold">local_fire_department</span>Panas</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <span class="text-[10px] font-extrabold text-blue-100 uppercase tracking-widest bg-white/15 px-3 py-1.5 rounded-lg">Langkah 2</span>
+                        <h3 class="font-sora text-xl md:text-2xl font-bold tracking-tight">Pilih Ukuran Volume</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            <button id="btnVol300" onclick="changeVolume('300ml', 2000)" class="btn-vol-opt h-16 rounded-2xl border border-white/20 bg-white/5 text-xs font-bold transition-all">300 ml</button>
+                            <button id="btnVol600" onclick="changeVolume('600ml', 4000)" class="btn-vol-opt h-16 rounded-2xl border-2 border-white bg-white/20 text-xs font-black shadow-md">600 ml</button>
+                            <button id="btnVol750" onclick="changeVolume('750ml', 5000)" class="btn-vol-opt h-16 rounded-2xl border border-white/20 bg-white/5 text-xs font-bold transition-all">750 ml</button>
+                            <button id="btnVol1L" onclick="changeVolume('1L', 6000)" class="btn-vol-opt h-16 rounded-2xl border border-white/20 bg-white/5 text-xs font-bold transition-all">1 Liter</button>
+                        </div>
+                    </div>
+
+                    <div class="pt-6 border-t border-white/10 flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-[10px] text-blue-200 uppercase tracking-wider font-bold">Harga Item</p>
+                            <p id="cardPriceDisplay" class="font-mono text-3xl font-black tracking-tight mt-0.5">Rp 4.000</p>
+                        </div>
+                        <button onclick="addToCart()" class="h-16 px-6 bg-white text-primary font-extrabold rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 text-sm md:text-base font-sora">
+                            <span class="material-symbols-outlined text-xl font-bold">add_shopping_cart</span>Tambah
+                        </button>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7 bg-white p-8 rounded-3xl border border-outline-variant/50 shadow-sm flex flex-col items-center justify-center min-h-[460px] relative overflow-hidden">
+                    <div id="bottleContainer" class="w-full max-w-[240px] aspect-[3/4] bg-gradient-to-b from-blue-50/20 to-slate-50 flex items-center justify-center relative rounded-2xl border border-blue-100/50 shadow-inner">
+                        <svg class="w-32 h-64 drop-shadow-md" viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M35 12h30v12H35z" fill="#1E293B" rx="2" />
+                            <path d="M32 42h36c6 0 10 4 10 10v124c0 10-8 18-18 18H40c-10 0-18-8-18-18V52c0-6 4-10 10-10z" fill="none" stroke="#0F52FF" stroke-width="3" opacity="0.85"/>
+                            <path id="liquidVisual" class="ripple" d="M24 110 Q 37 107, 50 110 T 76 110 L 76 175 Q 50 178, 24 175 Z" fill="#38bdf8" opacity="0.8"/>
+                            <text id="bottleCapacityLabel" x="50" y="85" fill="#0F172A" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="bold" text-anchor="middle">600ml</text>
+                        </svg>
+                    </div>
+                    <span id="previewBadge" class="mt-5 px-4 py-1.5 bg-blue-50 text-primary text-xs font-bold rounded-full shadow-sm border border-blue-100">Suhu Dingin Terpilih</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION CARA KERJA (DITUJU SAAT KLIK LIHAT CARA KERJA) -->
+        <section id="how-it-works-section" class="max-w-6xl mx-auto px-6 md:px-16 py-12">
+            <div class="text-center space-y-2 mb-10">
+                <h2 class="font-sora text-3xl font-black text-on-surface tracking-tight">Cara Kerja Pengisian Air</h2>
+                <p class="text-outline text-sm font-medium">Hanya butuh 3 langkah mudah untuk menikmati air segar berkualitas.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-3xl border border-outline-variant/60 shadow-sm text-center space-y-3">
+                    <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold font-sora mx-auto text-lg shadow-md">1</div>
+                    <h3 class="font-sora font-bold text-base text-on-surface">Pilih Suhu & Ukuran</h3>
+                    <p class="text-outline text-xs leading-relaxed">Sesuaikan kebutuhan air Anda (Dingin/Panas) serta volume botol langsung dari panel pilihan utama.</p>
+                </div>
+                <div class="bg-white p-6 rounded-3xl border border-outline-variant/60 shadow-sm text-center space-y-3">
+                    <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold font-sora mx-auto text-lg shadow-md">2</div>
+                    <h3 class="font-sora font-bold text-base text-on-surface">Lakukan Pembayaran</h3>
+                    <p class="text-outline text-xs leading-relaxed">Klik ikon keranjang, pilih metode fintech pilihan Anda (PayDrate Wallet, QRIS, dll), lalu selesaikan transaksi dengan aman.</p>
+                </div>
+                <div class="bg-white p-6 rounded-3xl border border-outline-variant/60 shadow-sm text-center space-y-3">
+                    <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold font-sora mx-auto text-lg shadow-md">3</div>
+                    <h3 class="font-sora font-bold text-base text-on-surface">Isi Air Otomatis</h3>
+                    <p class="text-outline text-xs leading-relaxed">Letakkan botol Anda di dispenser terdekat, mesin pintar akan membaca tiket transaksi dan mengucurkan air secara presisi.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION TENTANG / ABOUT -->
+        <section id="about-section" class="max-w-6xl mx-auto px-6 md:px-16 pb-24">
+            <div class="glass-card p-8 md:p-12 rounded-3xl border border-outline-variant/60 shadow-sm space-y-6">
+                <div class="space-y-2">
+                    <h2 class="font-sora text-3xl font-black text-on-surface tracking-tight">Tentang PayDrate</h2>
+                    <p class="text-primary text-sm font-bold font-sora uppercase tracking-wider">Masa Depan Hidrasi Pintar</p>
+                </div>
+                <p class="text-outline text-sm leading-relaxed font-medium">
+                    PayDrate adalah ekosistem pengisian air pintar berbasis teknologi finansial modern (Fintech). Kami hadir untuk mempermudah pemenuhan kebutuhan hidrasi harian Anda secara mandiri melalui dispenser otomatis nirkontak dengan opsi pembayaran instan yang terenkripsi dan aman.
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <!-- VIEW: PROFIL USER -->
+    <div id="view-profile" class="view-section hidden max-w-6xl mx-auto px-6 md:px-16 pt-32">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <!-- SIDEBAR TAB PROFIL -->
+            <aside class="lg:col-span-3 bg-white border border-outline-variant/60 rounded-3xl p-4 shadow-sm space-y-1">
+                <button id="tabBtn-dashboard" onclick="switchProfileTab('dashboard')" class="profile-tab-btn w-full flex items-center gap-3 p-3 bg-primary/5 text-primary font-bold rounded-2xl text-left text-xs transition-all">
+                    <span class="material-symbols-outlined text-lg">dashboard</span>Dashboard
+                </button>
+                <button id="tabBtn-order" onclick="switchProfileTab('order')" class="profile-tab-btn w-full flex items-center gap-3 p-3 hover:bg-slate-50 text-outline font-semibold rounded-2xl text-left text-xs transition-all">
+                    <span class="material-symbols-outlined text-lg">history</span>Order History
+                </button>
+                <button id="tabBtn-payment" onclick="switchProfileTab('payment')" class="profile-tab-btn w-full flex items-center gap-3 p-3 hover:bg-slate-50 text-outline font-semibold rounded-2xl text-left text-xs transition-all">
+                    <span class="material-symbols-outlined text-lg">account_balance_wallet</span>Payment / Wallet
+                </button>
+                <button id="tabBtn-notification" onclick="switchProfileTab('notification')" class="profile-tab-btn w-full flex items-center gap-3 p-3 hover:bg-slate-50 text-outline font-semibold rounded-2xl text-left text-xs transition-all">
+                    <span class="material-symbols-outlined text-lg">notifications</span>Notification Center
+                </button>
+                <button id="tabBtn-security" onclick="switchProfileTab('security')" class="profile-tab-btn w-full flex items-center gap-3 p-3 hover:bg-slate-50 text-outline font-semibold rounded-2xl text-left text-xs transition-all">
+                    <span class="material-symbols-outlined text-lg">security</span>Security Controls
+                </button>
+                <hr class="my-2 border-outline-variant/60">
+                <button onclick="switchView('beranda')" class="w-full flex items-center gap-3 p-3 text-error hover:bg-red-50 font-bold rounded-2xl text-left text-xs transition-all">
+                    <span class="material-symbols-outlined text-lg">logout</span>Kembali ke Beranda
+                </button>
+            </aside>
+
+            <!-- KONTEN UTAMA TAB PROFIL -->
+            <main class="lg:col-span-9 space-y-6">
+                <!-- PANEL INFORMASI SINGKAT -->
+                <div class="glass-card p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-20 h-20 rounded-full overflow-hidden border-4 border-secondary/30 shadow-inner avatar-placeholder flex items-center justify-center">
+                            <span class="material-symbols-outlined text-white text-4xl">person</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="font-sora font-black text-xl text-on-surface">Handayani</h2>
+                                <span class="px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest bg-gradient-to-r from-amber-500 to-yellow-400 text-white rounded-full shadow-sm">Platinum Member</span>
+                            </div>
+                            <p class="text-outline text-xs font-medium mt-0.5">handayani@gmail.com</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <div class="text-center">
+                            <p class="text-[10px] text-outline font-bold uppercase">Total Order</p>
+                            <p id="statTotalOrderCount" class="text-lg font-black text-primary font-sora">0</p>
+                        </div>
+                        <div class="text-center border-l pl-4">
+                            <p class="text-[10px] text-outline font-bold uppercase">Total Liter</p>
+                            <p id="statTotalLiterCount" class="text-lg font-black text-secondary font-sora">0 L</p>
+                        </div>
+                        <div class="text-center border-l pl-4">
+                            <p class="text-[10px] text-outline font-bold uppercase">Pengeluaran</p>
+                            <p id="statTotalSpendDisplay" class="text-lg font-black text-success font-mono">Rp 0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB TAB CONTENT: DASHBOARD -->
+                <div id="subTabContent-dashboard" class="sub-tab-panel space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white border border-outline-variant/60 p-6 rounded-3xl shadow-sm space-y-4">
+                            <h3 class="font-sora font-bold text-base border-b pb-2">Informasi Kontak</h3>
+                            <div class="space-y-3 text-xs font-medium">
+                                <div><label class="text-outline block mb-1">Nomor Handphone</label><input type="text" value="+62 812-3456-7890" disabled class="w-full h-10 px-3 bg-slate-50 border border-outline-variant rounded-xl text-slate-500"></div>
+                                <div><label class="text-outline block mb-1">Alamat Utama</label><textarea disabled class="w-full p-3 bg-slate-50 border border-outline-variant rounded-xl text-slate-500 resize-none h-14">Kost Lavender, Kamar 12B, Semarang</textarea></div>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-outline-variant/60 p-6 rounded-3xl shadow-sm flex flex-col justify-between">
+                            <div class="space-y-2">
+                                <h3 class="font-sora font-bold text-base">Kelengkapan Akun</h3>
+                                <p class="text-outline text-xs">Selesaikan verifikasi data untuk meningkatkan batasan limit saldo PayDrate Wallet.</p>
+                            </div>
+                            <div class="space-y-1.5 pt-4">
+                                <div class="flex justify-between text-xs font-bold text-outline"><span>Progress Keanggotaan</span><span class="text-primary">85%</span></div>
+                                <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden"><div class="bg-primary h-full" style="width: 85%;"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB TAB CONTENT: HISTORY ORDER -->
+                <div id="subTabContent-order" class="sub-tab-panel hidden space-y-4">
+                    <div class="flex flex-col sm:flex-row gap-3 items-center justify-between border-b pb-4">
+                        <div class="flex flex-wrap items-center gap-1">
+                            <button class="px-3 py-1 rounded-full bg-primary text-white text-[11px] font-bold shadow-sm">Semua</button>
+                        </div>
+                    </div>
+                    <div id="historyTimelineCardContainer" class="space-y-3 text-center py-8 text-outline text-xs">
+                        Belum ada riwayat transaksi air.
+                    </div>
+                </div>
+
+                <!-- SUB TAB CONTENT: PAYMENT/WALLET -->
+                <div id="subTabContent-payment" class="sub-tab-panel hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                        <div class="md:col-span-5 bg-gradient-to-br from-blue-700 to-primary p-6 rounded-3xl text-white space-y-6 shadow-xl border border-primary-container">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold tracking-wide uppercase text-blue-100">PayDrate Digital Wallet</span>
+                                <span class="material-symbols-outlined text-accent animate-pulse">sensors</span>
+                            </div>
+                            <div class="space-y-1">
+                                <span class="text-[10px] text-blue-200 block uppercase font-bold tracking-wider">Sisa Saldo Aplikasi</span>
+                                <h2 id="internalWalletBalanceValue" class="font-mono text-3xl font-black">Rp 75.000</h2>
+                            </div>
+                            <div class="flex items-center gap-2 text-[10px] text-blue-100 font-medium bg-white/10 p-2.5 rounded-xl">
+                                <span class="material-symbols-outlined text-base">verified_user</span>Limit harian akun terverifikasi: Rp 2.000.000
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-7 bg-white border border-outline-variant/60 p-6 rounded-3xl shadow-sm space-y-4">
+                            <h3 class="font-sora font-bold text-sm">Top Up / Isi Ulang Saldo</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-outline text-xs font-semibold block mb-1">Pilih Nominal Instan</label>
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <button onclick="executeTopUpSimulation(20000)" class="h-10 bg-slate-50 hover:bg-blue-50 border rounded-xl text-xs font-bold font-mono transition-all">Rp 20.000</button>
+                                        <button onclick="executeTopUpSimulation(50000)" class="h-10 bg-slate-50 hover:bg-blue-50 border rounded-xl text-xs font-bold font-mono transition-all">Rp 50.000</button>
+                                        <button onclick="executeTopUpSimulation(100000)" class="h-10 bg-slate-50 hover:bg-blue-50 border rounded-xl text-xs font-bold font-mono transition-all">Rp 100.000</button>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-outline">Metode pembayaran top up dikaitkan otomatis melalui Virtual Account Bank atau gerbang retail QRIS utama Anda.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB TAB CONTENT: NOTIFICATION CENTER -->
+                <div id="subTabContent-notification" class="sub-tab-panel hidden space-y-4">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <h3 class="font-sora font-bold text-base">Riwayat Notifikasi Masuk</h3>
+                    </div>
+                    <div id="centerNotificationContainer" class="space-y-3 text-center py-6 text-outline text-xs">
+                        Tidak ada notifikasi baru.
+                    </div>
+                </div>
+
+                <!-- SUB TAB CONTENT: SECURITY -->
+                <div id="subTabContent-security" class="sub-tab-panel hidden space-y-6">
+                    <div class="bg-white border border-outline-variant/60 p-6 rounded-3xl shadow-sm space-y-4">
+                        <div class="flex items-center gap-3 border-b pb-2">
+                            <span class="material-symbols-outlined text-primary font-bold">dialpad</span>
+                            <h3 class="font-sora font-bold text-sm">6-Digit PIN Transaksi</h3>
+                        </div>
+                        <p class="text-outline text-xs">PIN Keamanan wajib dimasukkan setiap kali Anda memotong saldo dompet internal untuk pengisian air minum pintar.</p>
+                        <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl">
+                            <span class="text-xs font-bold text-slate-700">Status PIN Keamanan</span>
+                            <span class="text-xs font-bold text-success">Aktif</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL KERANJANG BELANJA (CART OVERLAY) -->
+    <div id="cartModalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex justify-end hidden opacity-0 transition-opacity duration-300">
+        <div class="w-full max-w-md bg-white h-full shadow-2xl p-6 flex flex-col justify-between transform translate-x-full transition-transform duration-300">
+            <div class="space-y-6 flex-1 flex flex-col min-h-0">
+                <div class="flex justify-between items-center border-b pb-4 shrink-0">
+                    <h3 class="font-sora font-black text-xl flex items-center gap-2"><span class="material-symbols-outlined text-primary">shopping_basket</span>Keranjang Air</h3>
+                    <button onclick="closeCartModal()" class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-outline hover:text-on-surface">✕</button>
+                </div>
+                
+                <div id="cartItemsList" class="space-y-4 overflow-y-auto flex-1 pr-1"></div>
+
+                <div class="border-t pt-4 shrink-0 space-y-3">
+                    <p class="text-xs font-bold text-on-surface">Pilih Metode Pembayaran:</p>
+                    <div class="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                        
+                        <label class="flex items-center gap-2 p-3 bg-blue-50 border-2 border-primary rounded-xl cursor-pointer">
+                            <input type="radio" name="payment_method" value="PayDrate Wallet" checked class="text-primary focus:ring-primary">
+                            <div class="text-[11px]">
+                                <p class="font-bold text-slate-800">PayDrate Wallet</p>
+                                <p class="text-outline font-mono text-[10px]" id="cartWalletBalanceLabel">Rp 75.000</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-2 p-3 bg-slate-50 border border-outline-variant rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="radio" name="payment_method" value="QRIS" class="text-primary focus:ring-primary">
+                            <div class="text-[11px]">
+                                <p class="font-bold text-slate-800">QRIS (Tampilkan QR)</p>
+                                <p class="text-red-500 font-bold text-[9px]">Scan Instant</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-2 p-3 bg-slate-50 border border-outline-variant rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="radio" name="payment_method" value="ShopeePay" class="text-primary focus:ring-primary">
+                            <div class="text-[11px]">
+                                <p class="font-bold text-orange-600">ShopeePay</p>
+                                <p class="text-outline text-[9px]">E-Wallet Pay</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-2 p-3 bg-slate-50 border border-outline-variant rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="radio" name="payment_method" value="GoPay" class="text-primary focus:ring-primary">
+                            <div class="text-[11px]">
+                                <p class="font-bold text-cyan-600">GoPay</p>
+                                <p class="text-outline text-[9px]">Gojek Ecosystem</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-2 p-3 bg-slate-50 border border-outline-variant rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="radio" name="payment_method" value="OVO" class="text-primary focus:ring-primary">
+                            <div class="text-[11px]">
+                                <p class="font-bold text-purple-700">OVO</p>
+                                <p class="text-outline text-[9px]">Grab / OVO Cash</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-2 p-3 bg-slate-50 border border-outline-variant rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="radio" name="payment_method" value="Transfer Bank" class="text-primary focus:ring-primary">
+                            <div class="text-[11px]">
+                                <p class="font-bold text-slate-800">Transfer Bank</p>
+                                <p class="text-outline text-[9px]">Virtual Account</p>
+                            </div>
+                        </label>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t pt-4 space-y-4 shrink-0">
+                <div class="flex justify-between font-bold text-sm"><span>Total Tagihan:</span><span id="cartTotalPriceDisplay" class="font-mono text-primary text-base">Rp 0</span></div>
+                <button onclick="checkoutCartAndRefill()" class="w-full h-12 bg-primary hover:bg-blue-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2 text-sm shadow-md">
+                    <span class="material-symbols-outlined text-lg">payment</span>Bayar & Isi Air Sekarang
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL POP-UP KHUSUS QRIS -->
+    <div id="qrisModalOverlay" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[60] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm text-center space-y-4 shadow-2xl border transform scale-95 transition-transform duration-300">
+            <h3 class="font-sora font-black text-lg text-slate-800 flex items-center justify-center gap-1.5">
+                <span class="material-symbols-outlined text-red-500">qr_code_2</span>Scan QRIS Code
+            </h3>
+            <p class="text-xs text-outline font-medium">Silakan scan kode QR di bawah ini untuk menyelesaikan pembayaran tiket air minum.</p>
+            
+            <div class="mx-auto w-48 h-48 border-2 border-slate-100 bg-white p-2 rounded-2xl flex items-center justify-center shadow-inner">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=PayDrateSmartWaterRefillSystem" alt="Simulasi QRIS PayDrate" class="w-full h-full object-contain">
+            </div>
+
+            <div class="bg-slate-50 p-2.5 rounded-xl font-mono text-xs text-slate-700 flex justify-between font-bold">
+                <span>Total Tagihan:</span>
+                <span id="qrisModalPriceLabel" class="text-primary">Rp 0</span>
+            </div>
+
+            <div class="pt-2 grid grid-cols-2 gap-2">
+                <button onclick="closeQrisModal()" class="h-10 text-xs font-bold text-outline hover:bg-slate-100 rounded-xl transition-colors">Batal</button>
+                <button onclick="confirmQrisPaymentPaid()" class="h-10 text-xs font-black bg-success hover:bg-emerald-600 text-white rounded-xl shadow-md transition-colors">Saya Sudah Bayar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIKA JAVASCRIPT UTAMA -->
+    <script>
+        let currentWalletBalance = 75000;
+        let selectedTemperature = 'Cold';
+        let selectedVolume = '600ml';
+        let currentItemPrice = 4000;
+        let cart = [];
+        let totalOrders = 0;
+        let totalLiters = 0;
+        let totalSpend = 0;
+        let pendingQrisTotalCost = 0;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('bubbleContainer');
+            for (let i = 0; i < 15; i++) {
+                const bubble = document.createElement('div');
+                const size = Math.random() * 20 + 8;
+                bubble.className = 'bubble rounded-full';
+                bubble.style.width = size + 'px';
+                bubble.style.height = size + 'px';
+                bubble.style.left = Math.random() * 100 + 'vw';
+                bubble.style.top = Math.random() * 100 + 'vh';
+                bubble.style.animation = `bubbleUp ${Math.random() * 8 + 4}s infinite linear`;
+                container.appendChild(bubble);
+            }
+            updateNavbarStyle();
+        });
+
+        window.addEventListener('scroll', updateNavbarStyle);
+        function updateNavbarStyle() {
+            const navbar = document.getElementById('mainNavbar');
+
+            if (window.scrollY > 40) {
+                navbar.classList.remove('bg-transparent', 'text-white');
+                navbar.classList.add('glass-panel', 'bg-white/80', 'shadow-md');
+                document.querySelectorAll('.nav-link').forEach(link => link.classList.replace('text-white', 'text-slate-700'));
+            } else {
+                navbar.classList.remove('glass-panel', 'bg-white/80', 'shadow-md');
+                navbar.classList.add('bg-transparent');
+                document.querySelectorAll('.nav-link').forEach(link => link.classList.replace('text-slate-700', 'text-white'));
+            }
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(view => view.classList.add('hidden'));
+            document.getElementById('view-' + viewId).classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function switchProfileTab(tabId) {
+            document.querySelectorAll('.sub-tab-panel').forEach(panel => panel.classList.add('hidden'));
+            document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+                btn.classList.remove('bg-primary/5', 'text-primary', 'font-bold');
+                btn.classList.add('hover:bg-slate-50', 'text-outline', 'font-semibold');
+            });
+            document.getElementById('subTabContent-' + tabId).classList.remove('hidden');
+            document.getElementById('tabBtn-' + tabId).classList.add('bg-primary/5', 'text-primary', 'font-bold');
+        }
+
+        function scrollToProducts() {
+            switchView('beranda');
+            setTimeout(() => {
+                document.getElementById('products-section').scrollIntoView({ behavior: 'smooth' });
+            }, 50);
+        }
+
+        // AKSI JUMP: Tombol hero meluncur mulus ke section Cara Kerja
+        function scrollToHowItWorks() {
+            switchView('beranda');
+            setTimeout(() => {
+                document.getElementById('how-it-works-section').scrollIntoView({ behavior: 'smooth' });
+            }, 50);
+        }
+
+        // AKSI JUMP: Meluncur mulus ke section Tentang
+        function scrollToAbout() {
+            switchView('beranda');
+            setTimeout(() => {
+                document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' });
+            }, 50);
+        }
+
+        function changeTemperature(temp) {
+            selectedTemperature = temp;
+            const btnCold = document.getElementById('btnTempCold');
+            const btnHot = document.getElementById('btnTempHot');
+            const previewBadge = document.getElementById('previewBadge');
+            const liquid = document.getElementById('liquidVisual');
+
+            if (temp === 'Cold') {
+                btnCold.className = "h-20 flex items-center justify-between px-6 rounded-2xl border-2 border-white bg-white/20 text-base md:text-lg font-black transition-all shadow-md";
+                btnHot.className = "h-20 flex items-center justify-between px-6 rounded-2xl border border-white/20 bg-white/5 text-base md:text-lg font-bold opacity-60 transition-all";
+                previewBadge.innerText = "Suhu Dingin Terpilih";
+                previewBadge.className = "mt-5 px-4 py-1.5 bg-blue-50 text-primary text-xs font-bold rounded-full shadow-sm border border-blue-100";
+                liquid.setAttribute('fill', '#38bdf8');
+            } else {
+                btnHot.className = "h-20 flex items-center justify-between px-6 rounded-2xl border-2 border-white bg-white/20 text-base md:text-lg font-black transition-all shadow-md";
+                btnCold.className = "h-20 flex items-center justify-between px-6 rounded-2xl border border-white/20 bg-white/5 text-base md:text-lg font-bold opacity-60 transition-all";
+                previewBadge.innerText = "Suhu Panas Terpilih";
+                previewBadge.className = "mt-5 px-4 py-1.5 bg-red-50 text-error text-xs font-bold rounded-full shadow-sm border border-red-100";
+                liquid.setAttribute('fill', '#f97316');
+            }
+        }
+
+        function changeVolume(vol, price) {
+            selectedVolume = vol;
+            currentItemPrice = price;
+            document.getElementById('cardPriceDisplay').innerText = `Rp ${price.toLocaleString('id-ID')}`;
+            document.getElementById('bottleCapacityLabel').textContent = vol;
+
+            document.querySelectorAll('.btn-vol-opt').forEach(btn => {
+                btn.className = "btn-vol-opt h-16 rounded-2xl border border-white/20 bg-white/5 text-xs font-bold transition-all";
+            });
+            event.target.className = "btn-vol-opt h-16 rounded-2xl border-2 border-white bg-white/20 text-xs font-black shadow-md";
+
+            const liquid = document.getElementById('liquidVisual');
+            if (vol === '300ml') liquid.setAttribute('d', 'M24 140 Q 37 137, 50 140 T 76 140 L 76 175 Q 50 178, 24 175 Z');
+            else if (vol === '600ml') liquid.setAttribute('d', 'M24 110 Q 37 107, 50 110 T 76 110 L 76 175 Q 50 178, 24 175 Z');
+            else if (vol === '750ml') liquid.setAttribute('d', 'M24 90 Q 37 87, 50 90 T 76 90 L 76 175 Q 50 178, 24 175 Z');
+            else liquid.setAttribute('d', 'M24 60 Q 37 57, 50 60 T 76 60 L 76 175 Q 50 178, 24 175 Z');
+        }
+
+        function addToCart() {
+            cart.push({
+                id: Date.now(),
+                temp: selectedTemperature,
+                vol: selectedVolume,
+                price: currentItemPrice
+            });
+            updateCartUI();
+            pushNotification(`Berhasil menambah Air ${selectedTemperature} (${selectedVolume}) ke keranjang.`);
+        }
+
+        function updateCartUI() {
+            document.getElementById('cartBadgeCount').innerText = cart.length;
+            const container = document.getElementById('cartItemsList');
+            let total = 0;
+            container.innerHTML = '';
+
+            if (cart.length === 0) {
+                container.innerHTML = `<div class='text-center py-8 text-outline text-xs font-medium'>Keranjang belanja kosong.</div>`;
+                document.getElementById('cartTotalPriceDisplay').innerText = "Rp 0";
+                return;
+            }
+
+            cart.forEach(item => {
+                total += item.price;
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between p-3 bg-slate-50 border rounded-2xl text-xs";
+                row.innerHTML = `
+                    <div>
+                        <p class="font-bold text-on-surface">Air Suhu ${item.temp} (${item.vol})</p>
+                        <p class="font-mono text-outline mt-0.5">Rp ${item.price.toLocaleString('id-ID')}</p>
+                    </div>
+                    <button onclick="removeFromCart(${item.id})" class="text-error font-bold hover:underline">Hapus</button>
+                `;
+                container.appendChild(row);
+            });
+            document.getElementById('cartTotalPriceDisplay').innerText = `Rp ${total.toLocaleString('id-ID')}`;
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            updateCartUI();
+        }
+
+        function openCartModal() {
+            document.getElementById('cartWalletBalanceLabel').innerText = `Rp ${currentWalletBalance.toLocaleString('id-ID')}`;
+            const modal = document.getElementById('cartModalOverlay');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.children[0].classList.remove('translate-x-full');
+            }, 50);
+        }
+
+        function closeCartModal() {
+            const modal = document.getElementById('cartModalOverlay');
+            modal.classList.add('opacity-0');
+            modal.children[0].classList.add('translate-x-full');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function checkoutCartAndRefill() {
+            if (cart.length === 0) return;
+            let totalCost = cart.reduce((sum, item) => sum + item.price, 0);
+            const selectedMethod = document.querySelector('input[name="payment_method"]:checked').value;
+
+            if (selectedMethod === 'PayDrate Wallet') {
+                if (currentWalletBalance < totalCost) {
+                    alert("Saldo dompet internal tidak mencukupi, silakan gunakan QRIS atau metode pembayaran instan lainnya.");
+                    return;
+                }
+                currentWalletBalance -= totalCost;
+                document.getElementById('navWalletBalanceDisplay').innerText = `Rp ${currentWalletBalance.toLocaleString('id-ID')}`;
+                document.getElementById('internalWalletBalanceValue').innerText = `Rp ${currentWalletBalance.toLocaleString('id-ID')}`;
+                
+                finalizeRefillTransaction(selectedMethod, totalCost);
+            } 
+            else if (selectedMethod === 'QRIS') {
+                pendingQrisTotalCost = totalCost;
+                document.getElementById('qrisModalPriceLabel').innerText = `Rp ${totalCost.toLocaleString('id-ID')}`;
+                
+                const qrisModal = document.getElementById('qrisModalOverlay');
+                qrisModal.classList.remove('hidden');
+                setTimeout(() => {
+                    qrisModal.classList.remove('opacity-0');
+                    qrisModal.children[0].classList.remove('scale-95');
+                }, 50);
+            } 
+            else {
+                finalizeRefillTransaction(selectedMethod, totalCost);
+            }
+        }
+
+        function confirmQrisPaymentPaid() {
+            closeQrisModal();
+            finalizeRefillTransaction('QRIS', pendingQrisTotalCost);
+        }
+
+        function closeQrisModal() {
+            const qrisModal = document.getElementById('qrisModalOverlay');
+            qrisModal.classList.add('opacity-0');
+            qrisModal.children[0].classList.add('scale-95');
+            setTimeout(() => qrisModal.classList.add('hidden'), 300);
+        }
+
+        function finalizeRefillTransaction(methodName, totalCost) {
+            pushNotification(`Pembayaran Rp ${totalCost.toLocaleString('id-ID')} via ${methodName} Sukses.`);
+
+            totalOrders += cart.length;
+            cart.forEach(item => {
+                let numericVol = item.vol.includes('1L') ? 1.0 : parseFloat(item.vol) / 1000;
+                totalLiters += numericVol;
+            });
+            totalSpend += totalCost;
+
+            document.getElementById('statTotalOrderCount').innerText = totalOrders;
+            document.getElementById('statTotalLiterCount').innerText = totalLiters.toFixed(2) + " L";
+            document.getElementById('statTotalSpendDisplay').innerText = `Rp ${totalSpend.toLocaleString('id-ID')}`;
+
+            const historyContainer = document.getElementById('historyTimelineCardContainer');
+            if(totalOrders === cart.length) historyContainer.innerHTML = '';
+            
+            cart.forEach(item => {
+                const itemCard = document.createElement('div');
+                itemCard.className = "p-4 bg-white border rounded-2xl flex justify-between items-center text-xs text-left shadow-sm";
+                itemCard.innerHTML = `
+                    <div class="text-left">
+                        <p class="font-bold text-slate-800">INV/WATER/${Date.now()}</p>
+                        <p class="text-outline mt-0.5">Air ${item.temp} - ${item.vol} (${methodName.toUpperCase()})</p>
+                    </div>
+                    <span class="px-2.5 py-1 bg-emerald-50 text-success rounded-full font-bold">Berhasil</span>
+                `;
+                historyContainer.prepend(itemCard);
+            });
+
+            cart = [];
+            updateCartUI();
+            closeCartModal();
+            alert(`Transaksi Sukses Menggunakan ${methodName}! Dispenser pintar memproses pengisian air minum Anda.`);
+        }
+
+        function executeTopUpSimulation(amount) {
+            currentWalletBalance += amount;
+            document.getElementById('navWalletBalanceDisplay').innerText = `Rp ${currentWalletBalance.toLocaleString('id-ID')}`;
+            document.getElementById('internalWalletBalanceValue').innerText = `Rp ${currentWalletBalance.toLocaleString('id-ID')}`;
+            pushNotification(`Top up berhasil! Saldo Rp ${amount.toLocaleString('id-ID')} telah ditambahkan.`);
+            alert(`Top Up Berhasil senilai Rp ${amount.toLocaleString('id-ID')}`);
+        }
+
+        function pushNotification(msg) {
+            const badge = document.getElementById('navNotificationBadge');
+            badge.classList.remove('hidden');
+
+            const dropdownList = document.getElementById('notificationListItems');
+            const notifRow = document.createElement('div');
+            notifRow.className = "p-2 bg-blue-50/50 rounded-xl text-[11px] text-slate-700 leading-tight border border-blue-100";
+            notifRow.innerHTML = `<p class="font-medium">${msg}</p>`;
+            dropdownList.prepend(notifRow);
+
+            const centerContainer = document.getElementById('centerNotificationContainer');
+            if (centerContainer.innerText.includes("Tidak ada notifikasi")) centerContainer.innerHTML = '';
+            const centerRow = document.createElement('div');
+            centerRow.className = "p-3 bg-white border border-slate-100 rounded-2xl text-xs text-left shadow-sm flex items-start gap-2";
+            centerRow.innerHTML = `<span class="material-symbols-outlined text-primary text-sm">info</span><p class="font-medium text-slate-700">${msg}</p>`;
+            centerContainer.prepend(centerRow);
+        }
+
+        function toggleNotificationDropdown(e) {
+            e.stopPropagation();
+            const dropdown = document.getElementById('notificationDropdownMenu');
+            dropdown.classList.toggle('hidden');
+            document.getElementById('navNotificationBadge').classList.add('hidden');
+        }
+
+        function clearNotifications() {
+            document.getElementById('notificationListItems').innerHTML = '';
+            document.getElementById('centerNotificationContainer').innerHTML = `<div class="text-center py-6 text-outline text-xs">Tidak ada notifikasi baru.</div>`;
+        }
+
+        window.onclick = function() {
+            document.getElementById('notificationDropdownMenu').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
